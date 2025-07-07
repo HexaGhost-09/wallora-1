@@ -1,2 +1,0 @@
-# wallora
-Wallpapers App
