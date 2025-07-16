@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   FlatList,
@@ -7,77 +7,46 @@ import {
   Modal,
   View,
   StatusBar,
+  Alert,
 } from "react-native";
 import { Image } from "expo-image";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ModernCard } from "@/components/ui/ModernCard";
 import { ModernButton } from "@/components/ui/ModernButton";
-import { SearchBar } from "@/components/ui/SearchBar";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
+import { api, Wallpaper } from "@/services/api";
 
 const { width, height } = Dimensions.get("window");
 const IMAGE_SIZE = (width - 48) / 2;
 
 export default function HomeScreen() {
-  const wallpapers = [
-    {
-      id: "1",
-      uri: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg",
-      thumbnail: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?w=300&h=400&fit=crop",
-      title: "Abstract Waves",
-      category: "Abstract",
-    },
-    {
-      id: "2",
-      uri: "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg",
-      thumbnail: "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg?w=300&h=400&fit=crop",
-      title: "Mountain Vista",
-      category: "Nature",
-    },
-    {
-      id: "3",
-      uri: "https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg",
-      thumbnail: "https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?w=300&h=400&fit=crop",
-      title: "City Lights",
-      category: "Urban",
-    },
-    {
-      id: "4",
-      uri: "https://images.pexels.com/photos/1323712/pexels-photo-1323712.jpeg",
-      thumbnail: "https://images.pexels.com/photos/1323712/pexels-photo-1323712.jpeg?w=300&h=400&fit=crop",
-      title: "Ocean Sunset",
-      category: "Nature",
-    },
-    {
-      id: "5",
-      uri: "https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg",
-      thumbnail: "https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg?w=300&h=400&fit=crop",
-      title: "Geometric Pattern",
-      category: "Abstract",
-    },
-    {
-      id: "6",
-      uri: "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg",
-      thumbnail: "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg?w=300&h=400&fit=crop",
-      title: "Space Nebula",
-      category: "Space",
-    },
-  ];
-
+  const [wallpapers, setWallpapers] = useState<Wallpaper[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const filteredWallpapers = wallpapers.filter(wallpaper =>
-    wallpaper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    wallpaper.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    loadWallpapers();
+  }, []);
+
+  const loadWallpapers = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getAllWallpapers();
+      setWallpapers(data);
+    } catch (error) {
+      console.error('Failed to load wallpapers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const openImage = (image) => {
     setSelectedImage(image);
@@ -90,14 +59,66 @@ export default function HomeScreen() {
   const shareImage = async () => {
     if (selectedImage) {
       try {
-        const filename = selectedImage.uri.split("/").pop();
+        const filename = selectedImage.url.split("/").pop();
         const fileUri = FileSystem.cacheDirectory + filename;
-        await FileSystem.downloadAsync(selectedImage.uri, fileUri);
+        await FileSystem.downloadAsync(selectedImage.url, fileUri);
         await Sharing.shareAsync(fileUri);
       } catch (error) {
         console.error("Failed to share image:", error);
       }
     }
+  };
+
+  const setWallpaper = async (type: 'home' | 'lock' | 'both') => {
+    if (!selectedImage) return;
+
+    try {
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant media library permissions to set wallpaper.');
+        return;
+      }
+
+      // Download the image
+      const filename = selectedImage.url.split("/").pop() || 'wallpaper.jpg';
+      const fileUri = FileSystem.cacheDirectory + filename;
+      await FileSystem.downloadAsync(selectedImage.url, fileUri);
+
+      // Save to media library
+      await MediaLibrary.saveToLibraryAsync(fileUri);
+      
+      let message = '';
+      switch (type) {
+        case 'home':
+          message = 'Image saved to gallery. Please set as home screen wallpaper manually from your device settings.';
+          break;
+        case 'lock':
+          message = 'Image saved to gallery. Please set as lock screen wallpaper manually from your device settings.';
+          break;
+        case 'both':
+          message = 'Image saved to gallery. Please set as wallpaper for both home and lock screen manually from your device settings.';
+          break;
+      }
+      
+      Alert.alert('Success', message);
+    } catch (error) {
+      console.error('Failed to set wallpaper:', error);
+      Alert.alert('Error', 'Failed to save wallpaper. Please try again.');
+    }
+  };
+
+  const showWallpaperOptions = () => {
+    Alert.alert(
+      'Set Wallpaper',
+      'Choose where to apply this wallpaper:',
+      [
+        { text: 'Home Screen', onPress: () => setWallpaper('home') },
+        { text: 'Lock Screen', onPress: () => setWallpaper('lock') },
+        { text: 'Both', onPress: () => setWallpaper('both') },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
   };
 
   const renderItem = ({ item }) => (
@@ -107,7 +128,7 @@ export default function HomeScreen() {
       variant="elevated"
     >
       <Image
-        source={{ uri: item.thumbnail }}
+        source={{ uri: item.thumbnail || item.url }}
         style={styles.image}
         contentFit="cover"
         transition={300}
@@ -139,34 +160,23 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Search Bar */}
-      <SearchBar 
-        placeholder="Search wallpapers..."
-        onChangeText={setSearchQuery}
-        value={searchQuery}
-      />
-
-      {/* Stats */}
-      <View style={styles.statsContainer}>
-        <ModernCard style={styles.statCard} variant="outlined">
-          <ThemedText style={[styles.statNumber, { color: colors.tint }]}>
-            {filteredWallpapers.length}
-          </ThemedText>
-          <ThemedText style={[styles.statLabel, { color: colors.textSecondary }]}>
-            Wallpapers
-          </ThemedText>
-        </ModernCard>
-      </View>
-
       {/* Wallpapers Grid */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ThemedText style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Loading wallpapers...
+          </ThemedText>
+        </View>
+      ) : (
       <FlatList
-        data={filteredWallpapers}
+        data={wallpapers}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.gridContainer}
         showsVerticalScrollIndicator={false}
       />
+      )}
 
       {/* Full-screen Modal */}
       <Modal
@@ -200,7 +210,7 @@ export default function HomeScreen() {
           {/* Image */}
           {selectedImage && (
             <Image
-              source={{ uri: selectedImage.uri }}
+              source={{ uri: selectedImage.url }}
               style={styles.fullScreenImage}
               contentFit="contain"
             />
@@ -209,9 +219,16 @@ export default function HomeScreen() {
           {/* Bottom Controls */}
           <View style={styles.modalFooter}>
             <ModernButton
+              title="Set as Wallpaper"
+              onPress={showWallpaperOptions}
+              variant="primary"
+              icon={<IconSymbol name="photo.fill" size={20} color="#fff" />}
+              style={styles.wallpaperButton}
+            />
+            <ModernButton
               title="Share"
               onPress={shareImage}
-              variant="primary"
+              variant="secondary"
               icon={<IconSymbol name="square.and.arrow.up" size={20} color="#fff" />}
             />
           </View>
@@ -242,25 +259,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  statsContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  statCard: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingTop: 100,
   },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  statLabel: {
-    fontSize: 14,
-    marginTop: 2,
+  loadingText: {
+    fontSize: 16,
   },
   gridContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   imageCard: {
     flex: 1,
@@ -332,7 +342,11 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     paddingHorizontal: 16,
-    paddingBottom: 50,
+    paddingBottom: 60,
     alignItems: 'center',
+    gap: 12,
+  },
+  wallpaperButton: {
+    width: '100%',
   },
 });

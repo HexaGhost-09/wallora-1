@@ -43,7 +43,8 @@ export default function TabLayout() {
           fontWeight: '500',
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
+          paddingVertical: 8,
+          height: 70,
         },
       }}
     >

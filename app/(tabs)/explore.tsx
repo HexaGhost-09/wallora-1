@@ -1,89 +1,34 @@
-import React, { useState } from "react";
-import { StyleSheet, FlatList, TouchableOpacity, StatusBar } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, FlatList, TouchableOpacity, StatusBar, View } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ModernCard } from "@/components/ui/ModernCard";
-import { SearchBar } from "@/components/ui/SearchBar";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
+import { api, Category } from "@/services/api";
 
 export default function ExploreScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = [
-    { 
-      id: "1", 
-      name: "Abstract", 
-      icon: "sparkles", 
-      count: 245,
-      gradient: ['#667eea', '#764ba2'],
-      description: "Artistic and creative designs"
-    },
-    { 
-      id: "2", 
-      name: "Nature", 
-      icon: "leaf.fill", 
-      count: 189,
-      gradient: ['#11998e', '#38ef7d'],
-      description: "Landscapes and natural beauty"
-    },
-    { 
-      id: "3", 
-      name: "Urban", 
-      icon: "building.2.fill", 
-      count: 156,
-      gradient: ['#2193b0', '#6dd5ed'],
-      description: "City life and architecture"
-    },
-    { 
-      id: "4", 
-      name: "Geometric", 
-      icon: "square.grid.3x3.fill", 
-      count: 134,
-      gradient: ['#ee9ca7', '#ffdde1'],
-      description: "Patterns and shapes"
-    },
-    { 
-      id: "5", 
-      name: "Minimalist", 
-      icon: "minus.rectangle.fill", 
-      count: 98,
-      gradient: ['#bdc3c7', '#2c3e50'],
-      description: "Clean and simple designs"
-    },
-    { 
-      id: "6", 
-      name: "Space", 
-      icon: "globe.americas.fill", 
-      count: 87,
-      gradient: ['#0f0c29', '#24243e'],
-      description: "Cosmic and stellar imagery"
-    },
-    { 
-      id: "7", 
-      name: "Animals", 
-      icon: "paw.fill", 
-      count: 76,
-      gradient: ['#f093fb', '#f5576c'],
-      description: "Wildlife and pets"
-    },
-    { 
-      id: "8", 
-      name: "Technology", 
-      icon: "cpu.fill", 
-      count: 65,
-      gradient: ['#4facfe', '#00f2fe'],
-      description: "Digital and tech themes"
-    },
-  ];
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const loadCategories = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderCategoryItem = ({ item, index }) => (
     <ModernCard 
@@ -112,9 +57,6 @@ export default function ExploreScreen() {
         <ThemedText style={[styles.categoryDescription, { color: colors.textSecondary }]}>
           {item.description}
         </ThemedText>
-        <ThemedText style={[styles.categoryCount, { color: colors.tint }]}>
-          {item.count} wallpapers
-        </ThemedText>
       </ThemedView>
 
       <IconSymbol
@@ -141,33 +83,22 @@ export default function ExploreScreen() {
         </ThemedView>
       </ThemedView>
 
-      {/* Search Bar */}
-      <SearchBar 
-        placeholder="Search categories..."
-        onChangeText={setSearchQuery}
-        value={searchQuery}
-      />
-
-      {/* Stats */}
-      <ThemedView style={styles.statsContainer}>
-        <ModernCard style={styles.statCard} variant="outlined">
-          <ThemedText style={[styles.statNumber, { color: colors.tint }]}>
-            {filteredCategories.length}
-          </ThemedText>
-          <ThemedText style={[styles.statLabel, { color: colors.textSecondary }]}>
-            Categories
-          </ThemedText>
-        </ModernCard>
-      </ThemedView>
-
       {/* Categories List */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ThemedText style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Loading categories...
+          </ThemedText>
+        </View>
+      ) : (
       <FlatList
-        data={filteredCategories}
+        data={categories}
         renderItem={renderCategoryItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
+      )}
     </ThemedView>
   );
 }
@@ -193,25 +124,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  statsContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  statCard: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingTop: 100,
   },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  statLabel: {
-    fontSize: 14,
-    marginTop: 2,
+  loadingText: {
+    fontSize: 16,
   },
   listContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   categoryCard: {
     flexDirection: 'row',
@@ -239,9 +163,5 @@ const styles = StyleSheet.create({
   categoryDescription: {
     fontSize: 14,
     marginBottom: 6,
-  },
-  categoryCount: {
-    fontSize: 12,
-    fontWeight: '500',
   },
 });
