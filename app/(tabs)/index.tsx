@@ -6,89 +6,87 @@ import {
   TouchableOpacity,
   Modal,
   View,
+  StatusBar,
 } from "react-native";
 import { Image } from "expo-image";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ModernCard } from "@/components/ui/ModernCard";
+import { ModernButton } from "@/components/ui/ModernButton";
+import { SearchBar } from "@/components/ui/SearchBar";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
 
-const { width } = Dimensions.get("window");
-const IMAGE_SIZE = (width - 48) / 2; // Two images per row with padding
+const { width, height } = Dimensions.get("window");
+const IMAGE_SIZE = (width - 48) / 2;
 
 export default function HomeScreen() {
-  // Static array of simple image URLs for demonstration
   const wallpapers = [
     {
       id: "1",
-      uri: "https://placehold.co/600x400/FF5733/FFFFFF?text=Abstract",
-      thumbnail: "https://placehold.co/150x100/FF5733/FFFFFF?text=Abstract",
+      uri: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg",
+      thumbnail: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?w=300&h=400&fit=crop",
+      title: "Abstract Waves",
+      category: "Abstract",
     },
     {
       id: "2",
-      uri: "https://placehold.co/600x400/33FF57/FFFFFF?text=Nature",
-      thumbnail: "https://placehold.co/150x100/33FF57/FFFFFF?text=Nature",
+      uri: "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg",
+      thumbnail: "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg?w=300&h=400&fit=crop",
+      title: "Mountain Vista",
+      category: "Nature",
     },
     {
       id: "3",
-      uri: "https://placehold.co/600x400/3357FF/FFFFFF?text=Cityscape",
-      thumbnail: "https://placehold.co/150x100/3357FF/FFFFFF?text=Cityscape",
+      uri: "https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg",
+      thumbnail: "https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?w=300&h=400&fit=crop",
+      title: "City Lights",
+      category: "Urban",
     },
     {
       id: "4",
-      uri: "https://placehold.co/600x400/FF33A1/FFFFFF?text=Geometric",
-      thumbnail: "https://placehold.co/150x100/FF33A1/FFFFFF?text=Geometric",
+      uri: "https://images.pexels.com/photos/1323712/pexels-photo-1323712.jpeg",
+      thumbnail: "https://images.pexels.com/photos/1323712/pexels-photo-1323712.jpeg?w=300&h=400&fit=crop",
+      title: "Ocean Sunset",
+      category: "Nature",
     },
     {
       id: "5",
-      uri: "https://placehold.co/600x400/A133FF/FFFFFF?text=Minimalist",
-      thumbnail: "https://placehold.co/150x100/A133FF/FFFFFF?text=Minimalist",
+      uri: "https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg",
+      thumbnail: "https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg?w=300&h=400&fit=crop",
+      title: "Geometric Pattern",
+      category: "Abstract",
     },
     {
       id: "6",
-      uri: "https://placehold.co/600x400/33FFA1/FFFFFF?text=Space",
-      thumbnail: "https://placehold.co/150x100/33FFA1/FFFFFF?text=Space",
-    },
-    {
-      id: "7",
-      uri: "https://placehold.co/600x400/FF8C33/FFFFFF?text=Animals",
-      thumbnail: "https://placehold.co/150x100/FF8C33/FFFFFF?text=Animals",
-    },
-    {
-      id: "8",
-      uri: "https://placehold.co/600x400/33A1FF/FFFFFF?text=Cars",
-      thumbnail: "https://placehold.co/150x100/33A1FF/FFFFFF?text=Cars",
-    },
-    {
-      id: "9",
-      uri: "https://placehold.co/600x400/A1FF33/FFFFFF?text=Food",
-      thumbnail: "https://placehold.co/150x100/A1FF33/FFFFFF?text=Food",
-    },
-    {
-      id: "10",
-      uri: "https://placehold.co/600x400/FF3333/FFFFFF?text=Art",
-      thumbnail: "https://placehold.co/150x100/FF3333/FFFFFF?text=Art",
+      uri: "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg",
+      thumbnail: "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg?w=300&h=400&fit=crop",
+      title: "Space Nebula",
+      category: "Space",
     },
   ];
 
   const [selectedImage, setSelectedImage] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
 
-  // Function to open the full-screen image modal
+  const filteredWallpapers = wallpapers.filter(wallpaper =>
+    wallpaper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    wallpaper.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const openImage = (image) => {
     setSelectedImage(image);
   };
 
-  // Function to close the full-screen image modal
   const closeImage = () => {
     setSelectedImage(null);
   };
 
-  // Function to download and share the image
   const shareImage = async () => {
     if (selectedImage) {
       try {
@@ -102,59 +100,104 @@ export default function HomeScreen() {
     }
   };
 
-  // Render each wallpaper item in the grid
   const renderItem = ({ item }) => (
-    <TouchableOpacity
-      onPress={() => openImage(item)}
-      style={styles.imageWrapper}
+    <ModernCard 
+      onPress={() => openImage(item)} 
+      style={styles.imageCard}
+      variant="elevated"
     >
       <Image
         source={{ uri: item.thumbnail }}
         style={styles.image}
         contentFit="cover"
-        transition={1000}
+        transition={300}
       />
-    </TouchableOpacity>
+      <View style={styles.imageOverlay}>
+        <ThemedText style={styles.imageTitle} numberOfLines={1}>
+          {item.title}
+        </ThemedText>
+        <ThemedText style={[styles.imageCategory, { color: colors.textSecondary }]} numberOfLines={1}>
+          {item.category}
+        </ThemedText>
+      </View>
+    </ModernCard>
   );
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{
-        light: Colors.light.background,
-        dark: Colors.dark.background,
-      }}
-      headerImage={
-        <IconSymbol
-          size={250}
-          color={Colors[colorScheme ?? "light"].tint}
-          name="photo.fill.on.rectangle.fill"
-          style={styles.headerIcon}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Wallpapers</ThemedText>
-      </ThemedView>
+    <ThemedView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
+      
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <ThemedText type="title" style={styles.headerTitle}>
+            Wallora
+          </ThemedText>
+          <ThemedText style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+            Discover beautiful wallpapers
+          </ThemedText>
+        </View>
+      </View>
 
+      {/* Search Bar */}
+      <SearchBar 
+        placeholder="Search wallpapers..."
+        onChangeText={setSearchQuery}
+        value={searchQuery}
+      />
+
+      {/* Stats */}
+      <View style={styles.statsContainer}>
+        <ModernCard style={styles.statCard} variant="outlined">
+          <ThemedText style={[styles.statNumber, { color: colors.tint }]}>
+            {filteredWallpapers.length}
+          </ThemedText>
+          <ThemedText style={[styles.statLabel, { color: colors.textSecondary }]}>
+            Wallpapers
+          </ThemedText>
+        </ModernCard>
+      </View>
+
+      {/* Wallpapers Grid */}
       <FlatList
-        data={wallpapers}
+        data={filteredWallpapers}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.gridContainer}
+        showsVerticalScrollIndicator={false}
       />
 
-      {/* Full-screen image modal */}
+      {/* Full-screen Modal */}
       <Modal
         visible={!!selectedImage}
         transparent={true}
         onRequestClose={closeImage}
         animationType="fade"
+        statusBarTranslucent
       >
-        <ThemedView style={styles.fullScreenModal}>
-          <TouchableOpacity onPress={closeImage} style={styles.closeButton}>
-            <IconSymbol name="xmark.circle.fill" size={30} color="#fff" />
-          </TouchableOpacity>
+        <View style={[styles.fullScreenModal, { backgroundColor: colors.overlay }]}>
+          {/* Header Controls */}
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={closeImage} style={styles.modalButton}>
+              <IconSymbol name="xmark" size={24} color="#fff" />
+            </TouchableOpacity>
+            <View style={styles.modalTitleContainer}>
+              {selectedImage && (
+                <>
+                  <ThemedText style={styles.modalTitle}>
+                    {selectedImage.title}
+                  </ThemedText>
+                  <ThemedText style={styles.modalCategory}>
+                    {selectedImage.category}
+                  </ThemedText>
+                </>
+              )}
+            </View>
+            <View style={{ width: 44 }} />
+          </View>
+
+          {/* Image */}
           {selectedImage && (
             <Image
               source={{ uri: selectedImage.uri }}
@@ -162,87 +205,134 @@ export default function HomeScreen() {
               contentFit="contain"
             />
           )}
-          <TouchableOpacity onPress={shareImage} style={styles.shareButton}>
-            <IconSymbol
-              name="square.and.arrow.up.fill"
-              size={30}
-              color="#fff"
+
+          {/* Bottom Controls */}
+          <View style={styles.modalFooter}>
+            <ModernButton
+              title="Share"
+              onPress={shareImage}
+              variant="primary"
+              icon={<IconSymbol name="square.and.arrow.up" size={20} color="#fff" />}
             />
-            <ThemedText style={styles.shareButtonText}>Share</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
+          </View>
+        </View>
       </Modal>
-    </ParallaxScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 20,
-    backgroundColor: "transparent",
+  container: {
+    flex: 1,
   },
-  headerIcon: {
-    alignSelf: "center",
-    marginTop: 20,
-  },
-  gridContainer: {
+  header: {
+    paddingTop: 60,
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
-  imageWrapper: {
+  headerContent: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  statsContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  statCard: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    fontSize: 14,
+    marginTop: 2,
+  },
+  gridContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+  },
+  imageCard: {
     flex: 1,
-    margin: 8,
-    borderRadius: 12,
-    overflow: "hidden",
-    aspectRatio: 3 / 4, // Maintain aspect ratio for wallpaper previews
-    backgroundColor: "#eee",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+    margin: 6,
+    padding: 0,
+    overflow: 'hidden',
+    aspectRatio: 3 / 4,
   },
   image: {
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 12,
+    background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  imageTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  imageCategory: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    marginTop: 2,
   },
   fullScreenModal: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.9)",
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'space-between',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 60,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  modalButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  modalCategory: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    marginTop: 2,
   },
   fullScreenImage: {
-    width: "100%",
-    height: "80%",
+    flex: 1,
+    marginHorizontal: 16,
   },
-  closeButton: {
-    position: "absolute",
-    top: 50,
-    right: 20,
-    zIndex: 1,
-    padding: 10,
-    borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  shareButton: {
-    position: "absolute",
-    bottom: 50,
-    left: 20,
-    zIndex: 1,
-    padding: 10,
-    borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  shareButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+  modalFooter: {
+    paddingHorizontal: 16,
+    paddingBottom: 50,
+    alignItems: 'center',
   },
 });
