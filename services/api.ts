@@ -4,6 +4,7 @@ export interface Wallpaper {
   title: string;
   category: string;
   thumbnail?: string;
+  timestamp?: string;
 }
 
 export interface Category {
@@ -18,17 +19,19 @@ const API_BASE_URL = 'https://wallora-wallpapers.deno.dev';
 export const api = {
   async getAllWallpapers(): Promise<Wallpaper[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/wallpapers`);
+      const response = await fetch(`${API_BASE_URL}/wallpapers?limit=50`);
       if (!response.ok) {
         throw new Error('Failed to fetch wallpapers');
       }
       const data = await response.json();
+      
       return data.map((item: any) => ({
         id: item.id || Math.random().toString(),
         url: item.url,
-        title: item.title || 'Untitled',
+        title: this.generateTitle(item.category, item.id),
         category: item.category || 'Unknown',
         thumbnail: item.thumbnail || item.url,
+        timestamp: item.timestamp,
       }));
     } catch (error) {
       console.error('Error fetching wallpapers:', error);
@@ -72,21 +75,40 @@ export const api = {
 
   async getWallpapersByCategory(category: string): Promise<Wallpaper[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories/${category}`);
+      const response = await fetch(`${API_BASE_URL}/wallpapers/${category}?limit=50`);
       if (!response.ok) {
         throw new Error(`Failed to fetch ${category} wallpapers`);
       }
       const data = await response.json();
+      
       return data.map((item: any) => ({
         id: item.id || Math.random().toString(),
         url: item.url,
-        title: item.title || 'Untitled',
+        title: this.generateTitle(category, item.id),
         category: category,
         thumbnail: item.thumbnail || item.url,
+        timestamp: item.timestamp,
       }));
     } catch (error) {
       console.error(`Error fetching ${category} wallpapers:`, error);
       return [];
     }
+  },
+
+  generateTitle(category: string, id: string): string {
+    const categoryTitles: Record<string, string[]> = {
+      nature: ['Mountain Vista', 'Forest Path', 'Ocean Waves', 'Sunset Sky', 'Flower Field'],
+      cars: ['Sports Car', 'Classic Vehicle', 'Racing Machine', 'Luxury Ride', 'Street Racer'],
+      anime: ['Anime Art', 'Character Design', 'Manga Style', 'Anime Scene', 'Digital Art'],
+      space: ['Galaxy View', 'Nebula', 'Star Field', 'Planet Surface', 'Cosmic Wonder'],
+    };
+
+    const titles = categoryTitles[category] || ['Wallpaper'];
+    const hash = id.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    return titles[Math.abs(hash) % titles.length];
   },
 };
