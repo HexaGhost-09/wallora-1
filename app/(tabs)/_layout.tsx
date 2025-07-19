@@ -1,9 +1,9 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform } from "react-native";
+import { Platform, Text } from "react-native"; // Added Text for a simple alternative
 
 import { HapticTab } from "@/components/HapticTab";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+// Removed: import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -52,12 +52,9 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Wallpapers",
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol
-              size={24}
-              name={focused ? "photo.fill" : "photo"}
-              color={color}
-            />
+          // Replaced IconSymbol with a simple Text component for demonstration
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 24 }}>🖼️</Text> // You can replace this with any other icon component or image
           ),
         }}
       />
@@ -65,12 +62,9 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: "Categories",
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol 
-              size={24} 
-              name={focused ? "square.grid.2x2.fill" : "square.grid.2x2"} 
-              color={color} 
-            />
+          // Replaced IconSymbol with a simple Text component for demonstration
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 24 }}>📁</Text> // You can replace this with any other icon component or image
           ),
         }}
       />
