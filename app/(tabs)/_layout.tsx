@@ -1,16 +1,16 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform, Text } from "react-native"; // Added Text for a simple alternative
+import { Platform, Text } from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
 // Removed: import { IconSymbol } from "@/components/ui/IconSymbol";
-import TabBarBackground from "@/components/ui/TabBarBackground";
+// Removed: import TabBarBackground from "@/components/ui/TabBarBackground"; // This line is now removed
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[colorScheme ?? "light"];
 
   return (
     <Tabs
@@ -19,16 +19,16 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.tabIconDefault,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
+        // Removed: tabBarBackground: TabBarBackground, // This line is now removed
         tabBarStyle: Platform.select({
           ios: {
             position: "absolute",
-            backgroundColor: colors.surface,
+            backgroundColor: colors.surface, // TabBarBackground was providing this, ensure it's here
             borderTopColor: colors.border,
             borderTopWidth: 0.5,
           },
           default: {
-            backgroundColor: colors.surface,
+            backgroundColor: colors.surface, // TabBarBackground was providing this, ensure it's here
             borderTopColor: colors.border,
             borderTopWidth: 0.5,
             elevation: 8,
@@ -40,7 +40,7 @@ export default function TabLayout() {
         }),
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '500',
+          fontWeight: "500",
         },
         tabBarItemStyle: {
           paddingVertical: 8,
@@ -52,9 +52,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Wallpapers",
-          // Replaced IconSymbol with a simple Text component for demonstration
           tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 24 }}>🖼️</Text> // You can replace this with any other icon component or image
+            <Text style={{ color, fontSize: 24 }}>🖼️</Text>
           ),
         }}
       />
@@ -62,9 +61,8 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: "Categories",
-          // Replaced IconSymbol with a simple Text component for demonstration
           tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 24 }}>📁</Text> // You can replace this with any other icon component or image
+            <Text style={{ color, fontSize: 24 }}>📁</Text>
           ),
         }}
       />
