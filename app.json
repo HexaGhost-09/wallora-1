@@ -2,7 +2,7 @@
   "expo": {
     "name": "Wallora",
     "slug": "wallora",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "wallora",
@@ -44,6 +44,12 @@
       "eas": {
         "projectId": "3062d2c4-38b7-4448-a97b-5685181828f8"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3062d2c4-38b7-4448-a97b-5685181828f8"
     }
   }
 }
