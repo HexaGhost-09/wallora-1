@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Wallora-1",
+    "name": "Wallora",
     "slug": "Wallora-1",
-    "version": "1.0.0",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "wallora1",
@@ -16,8 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.wallora1.app"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
@@ -38,13 +37,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "756c17cd-f2ac-4d72-965d-1ce0be1aebe7"
-      }
-    },
-    "owner": "mrbenns"
+    }
   }
 }
